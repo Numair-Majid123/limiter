@@ -14,13 +14,13 @@ module Limiter
       @blk = blk
     end
 
-    def shift
+    def shift(blk_params = {})
       time = nil
 
       @mutex.synchronize do
         time = @ring[@head]
 
-        sleep_until(time + @interval)
+        sleep_until(time + @interval, blk_params)
 
         @ring[@head] = clock.time
         @head = (@head + 1) % @size
@@ -31,10 +31,10 @@ module Limiter
 
     private
 
-    def sleep_until(time)
+    def sleep_until(time, blk_params = {})
       interval = time - clock.time
       return unless interval.positive?
-      @blk.call if @blk
+      @blk.call(blk_params) if @blk
     end
 
     def clock
